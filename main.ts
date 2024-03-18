@@ -1,4 +1,5 @@
 import process from 'node:process'
+import { crawlPage } from './crawl'
 
 function main() {
   // Get the CLI input arguments
@@ -9,11 +10,15 @@ function main() {
   const userInput = args.slice(2)
   console.log('userInput', userInput)
 
-  if (userInput.length !== 1)
+  if (userInput.length !== 1) {
+    // https://wagslane.dev
     console.error('require BASE_URL and only BASE_URL')
+    return
+  }
 
-  else
-    console.log('crawling', userInput[0])
+  console.log('crawling', userInput[0])
+  crawlPage(userInput[0])
 }
 
 main()
+// npx tsx main.ts https://wagslane.dev
