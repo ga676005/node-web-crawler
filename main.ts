@@ -1,7 +1,7 @@
 import process from 'node:process'
 import { crawlPage } from './crawl'
 
-function main() {
+async function main() {
   // Get the CLI input arguments
   const args = process.argv
 
@@ -16,9 +16,13 @@ function main() {
     return
   }
 
-  console.log('crawling', userInput[0])
-  crawlPage(userInput[0])
+  const baseUrl = new URL(userInput[0]).host
+  // console.log('crawling', userInput[0])
+  const pages = await crawlPage(userInput[0], userInput[0])
+  console.log('====', pages, '====')
 }
 
 main()
 // npx tsx main.ts https://wagslane.dev
+
+// fetch('https://wagslane.dev').then(r => r.text()).then(console.log)

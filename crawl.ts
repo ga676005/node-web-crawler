@@ -1,11 +1,12 @@
 import { JSDOM } from 'jsdom'
 
+type Pages = Record<string, number>
+
 export function normalizeURL(input: string) {
   const url = new URL(input)
-  let s = url.hostname + url.pathname
+  let s = url.host + url.pathname
   s = s.replace(/\/$/, '') // remove trailing /
   return s
-  // const result = input.replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/$/, '')
 }
 
 export function getURLsFromHTML(htmlBody: string, baseURL: string) {
@@ -17,7 +18,8 @@ export function getURLsFromHTML(htmlBody: string, baseURL: string) {
         return new URL(e.href, baseURL).href
       }
       catch (err) {
-        console.log(err.message, e.href)
+        if (err instanceof Error)
+          console.log(err.message, e.href)
       }
     }
     else {
@@ -25,32 +27,54 @@ export function getURLsFromHTML(htmlBody: string, baseURL: string) {
         return new URL(e.href).href
       }
       catch (err) {
-        console.log(err.message, e.href)
+        if (err instanceof Error)
+          console.log(err.message, e.href)
       }
     }
 
     return null
-  }).filter(Boolean)
+  }).filter((v): v is string => Boolean(v))
 
   return result
 }
 
-export async function crawlPage(currentURL: string) {
+export async function crawlPage(baseURL: string, currentURL: string, pages: Pages = {}) {
   try {
-    const response = await fetch(currentURL)
+    if (new URL(currentURL).origin !== baseURL)
+      return pages
+
+    // const protocol = new URL(baseURL).protocol
+    currentURL = normalizeURL(currentURL)
+
+    if (currentURL in pages) {
+      pages[currentURL] += 1
+      return pages
+    }
+    else {
+      pages[currentURL] = 1
+    }
+
+    console.log(`fetch https://${currentURL}`)
+    const response = await fetch(`https://${currentURL}`)
     if (response.ok === false || response.status >= 400) {
       console.error('response.ok', response.ok)
       console.error('response.status', response.status)
     }
     else if (response.headers.get('content-type')?.includes('text/html') !== true) {
-      console.error('content-type is not text/html', response.headers.get('content-type'))
+      console.error(`${currentURL} content-type is not text/html`, response.headers.get('content-type'))
     }
     else {
-      const text = await response.text()
-      console.log(text)
+      const pageHTML = await response.text()
+      // console.log(pageHTML)
+      const urls = getURLsFromHTML(pageHTML, baseURL)
+      if (urls)
+        await Promise.allSettled(urls.map(url => crawlPage(baseURL, url, pages)))
     }
+
+    return pages
   }
   catch (err) {
     console.error('something went wrong', err)
+    return pages
   }
 }
