@@ -1,5 +1,6 @@
 import process from 'node:process'
 import { crawlPage } from './crawl'
+import { printReport } from './report'
 
 async function main() {
   // Get the CLI input arguments
@@ -19,7 +20,8 @@ async function main() {
   const baseUrl = new URL(userInput[0]).host
   // console.log('crawling', userInput[0])
   const pages = await crawlPage(userInput[0], userInput[0])
-  console.log('====', pages, '====')
+  printReport(pages)
+  // console.log('====', pages, '====')
 }
 
 main()

@@ -1,6 +1,6 @@
 import { JSDOM } from 'jsdom'
 
-type Pages = Record<string, number>
+export type Pages = Record<string, number>
 
 export function normalizeURL(input: string) {
   const url = new URL(input)
